@@ -1,0 +1,111 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.3.1.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id "com.microsoft.azure.azurefunctions" version "1.3.0"
+}
+
+group = 'com.sevnis.serverlesspoc'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+    mavenCentral()
+    maven { url "https://repo.spring.io/libs-snapshot-local" }
+    maven { url "https://repo.spring.io/libs-milestone-local" }
+    maven { url "https://repo.spring.io/release" }
+    maven { url "https://repo.maven.apache.org/maven2" }
+    maven { url "https://repo.spring.io/snapshot" }
+    maven { url "https://repo.spring.io/milestone" }
+}
+
+ext {
+    set('springCloudVersion', "Hoxton.SR6")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+dependencies {
+    compile("org.springframework.cloud:spring-cloud-function-adapter-azure")
+    compile("org.springframework.cloud:spring-cloud-function-adapter-aws")
+    compile("org.springframework.cloud:spring-cloud-starter-function-webflux")
+    compile("org.springframework.boot:spring-boot-configuration-processor")
+    compileOnly("org.projectlombok:lombok")
+    compileOnly("com.amazonaws:aws-lambda-java-events:2.0.2")
+    compileOnly("com.amazonaws:aws-lambda-java-core:1.1.0")
+    compileOnly("org.springframework.cloud:spring-cloud-starter-function-web")
+    annotationProcessor("org.projectlombok:lombok")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes 'Start-Class': 'com.sevnis.serverlesspoc.multicloud.MulticloudApplication'
+        attributes 'Main-Class': 'com.sevnis.serverlesspoc.multicloud.MulticloudApplication'
+    }
+}
+
+compileJava.options.encoding = 'UTF-8'
+
+assemble.finalizedBy = [shadowJar]
+
+azurefunctions {
+    resourceGroup = 'java-functions-group'
+    appName = 'function-azure-irwan-gradle'
+    pricingTier = 'Consumption'
+    region = 'australiasoutheast'
+    appSettings {
+        WEBSITE_RUN_FROM_PACKAGE = '1'
+        FUNCTIONS_EXTENSION_VERSION = '~2'
+        FUNCTIONS_WORKER_RUNTIME = 'java'
+        MAIN_CLASS = 'com.sevnis.serverlesspoc.multicloud.MulticloudApplication'
+    }
+    runtime {
+        os = 'windows'
+    }
+    deployment {
+        type = 'run_from_blob'
+    }
+    localDebug = "transport=dt_socket,server=y,suspend=n,address=5005"
+
+}
+
+
+import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
+
+shadowJar {
+    classifier = 'aws'
+    dependencies {
+        exclude(
+                dependency("org.springframework.cloud:spring-cloud-function-web:${springCloudVersion}"))
+    }
+    // Required for Spring
+    mergeServiceFiles()
+    append 'META-INF/spring.handlers'
+    append 'META-INF/spring.schemas'
+    append 'META-INF/spring.tooling'
+    transform(PropertiesFileTransformer) {
+        paths = ['META-INF/spring.factories']
+        mergeStrategy = "append"
+    }
+}
