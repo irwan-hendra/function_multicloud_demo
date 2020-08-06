@@ -17,6 +17,7 @@ configurations {
     }
 }
 
+///TEMP: todo clean the repos
 repositories {
     mavenLocal()
     jcenter()
@@ -67,7 +68,7 @@ jar {
 
 compileJava.options.encoding = 'UTF-8'
 
-assemble.finalizedBy = [shadowJar]
+assemble.dependsOn = [shadowJar]
 
 azurefunctions {
     resourceGroup = 'java-functions-group'
@@ -86,15 +87,13 @@ azurefunctions {
     deployment {
         type = 'run_from_blob'
     }
-    localDebug = "transport=dt_socket,server=y,suspend=n,address=5005"
-
 }
 
 
 import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 
 shadowJar {
-    classifier = 'aws'
+    archiveClassifier = null
     dependencies {
         exclude(
                 dependency("org.springframework.cloud:spring-cloud-function-web:${springCloudVersion}"))
