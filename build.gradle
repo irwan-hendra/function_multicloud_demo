@@ -17,7 +17,7 @@ configurations {
     }
 }
 
-///TEMP: todo clean the repos
+///TEMP: todo clean the repos, local.settings.json custom location
 repositories {
     mavenLocal()
     jcenter()
@@ -72,7 +72,7 @@ assemble.dependsOn = [shadowJar]
 
 azurefunctions {
     resourceGroup = 'java-functions-group'
-    appName = 'function-azure-irwan-gradle'
+    appName = 'function-uppercase-multicloud'
     pricingTier = 'Consumption'
     region = 'australiasoutheast'
     appSettings {

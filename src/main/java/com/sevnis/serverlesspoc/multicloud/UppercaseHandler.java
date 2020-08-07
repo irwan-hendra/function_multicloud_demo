@@ -18,6 +18,7 @@ public class UppercaseHandler extends AzureSpringBootRequestHandler<String, Stri
       authLevel = AuthorizationLevel.ANONYMOUS)
       HttpRequestMessage<Optional<String>> request,
       ExecutionContext context) {
+
     return handleRequest(request.getBody().get(), context);
   }
 }
